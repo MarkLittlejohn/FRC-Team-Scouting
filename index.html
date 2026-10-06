@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A beautiful and modern FRC Team Scouting App using The Blue Alliance API">
+    <title>Maniac Metrics</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="./logo.png">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Local Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Phosphor Icons for UI Elements -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body>
+    <div class="app-background">
+        <!-- Blobs for animated background -->
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <main class="app-container">
+        <header class="glass-panel" style="position: relative;">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="./logo.png" alt="Maniac Metrics Logo"
+                        style="height: 100px; width: auto; object-fit: contain;">
+                    <div style="display: flex; flex-direction: column;">
+                        <h1 style="font-size: 3.5rem; line-height: 1.1;">Maniac <span class="highlight">Metrics</span>
+                        </h1>
+                        <span
+                            style="font-size: 1.5rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; margin-top: -0.2rem;">by
+                            Darkflame</span>
+                    </div>
+                </div>
+
+                <form id="setup-form" class="setup-controls" style="align-items: flex-end;">
+                    <div style="display: flex; flex-direction: column; flex: 1; min-width: 300px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem; margin-left: 0.25rem;">
+                            <label id="event-list-label" style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;"><i class="ph ph-globe" style="color: #60a5fa; margin-right: 0.25rem;"></i> All Events</label>
+                        </div>
+                        <div class="input-group">
+                            <i class="ph ph-calendar-event"></i>
+                            <input type="text" id="event-key" placeholder="Event Key (e.g. 2024casj)" required
+                                autocomplete="off" list="event-suggestions" style="width: 100%;">
+                            <datalist id="event-suggestions"></datalist>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
+                        <button type="submit" class="btn-primary" id="fetch-btn" style="height: 48px;">
+                            <span>Fetch Data</span>
+                            <i class="ph ph-arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <div style="position: absolute; top: 1rem; right: 2rem; display: flex; gap: 0.5rem; z-index: 10;">
+                <button type="button" id="open-tools-btn" class="icon-btn" style="background: rgba(255,255,255,0.05); border: 1px solid var(--surface-border); border-radius: 8px; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center;" title="Tools">
+                    <i class="ph ph-wrench" style="font-size: 1.25rem;"></i>
+                </button>
+                <button type="button" id="open-settings-btn" class="icon-btn" style="background: rgba(255,255,255,0.05); border: 1px solid var(--surface-border); border-radius: 8px; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center;" title="Settings">
+                    <i class="ph ph-gear" style="font-size: 1.25rem;"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Favorite Team Dashboard -->
+        <section class="glass-panel hidden" id="favorite-team-dashboard" style="position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -20px; right: -20px; opacity: 0.1; transform: rotate(15deg);">
+                <i class="ph ph-star" style="font-size: 12rem; color: #fbbf24;"></i>
+            </div>
+
+            <div style="position: relative; z-index: 1;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid var(--surface-border); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                            <i class="ph ph-star-fill" style="color: #fbbf24;"></i>
+                            <span
+                                style="font-size: 0.85rem; font-weight: 600; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.05em;">My
+                                Team</span>
+                        </div>
+                        <h2 id="fav-team-title" style="color: var(--text-primary); font-size: 2rem;">Loading...</h2>
+                        <p id="fav-team-name" class="text-secondary">Loading...</p>
+                    </div>
+                </div>
+
+                <div id="fav-team-body-content" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div id="fav-team-summary"></div>
+                    <div id="fav-team-events-list" class="events-history"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="content-area glass-panel hidden" id="main-content">
+            <nav class="tabs">
+                <button class="tab-btn active" data-tab="teams">
+                    <i class="ph ph-users"></i> Teams
+                </button>
+                <button class="tab-btn" data-tab="matches">
+                    <i class="ph ph-game-controller"></i> Matches
+                </button>
+                <button class="tab-btn" data-tab="rankings">
+                    <i class="ph ph-list-numbers"></i> Rankings
+                </button>
+                <button class="tab-btn" data-tab="simulator">
+                    <i class="ph ph-crystal-ball"></i> Simulator
+                </button>
+            </nav>
+
+            <div class="tab-content">
+                <!-- Status/Loading Indicator -->
+                <div id="status-message" class="status-container hidden">
+                    <div class="spinner"></div>
+                    <p>Loading data...</p>
+                </div>
+
+                <!-- Teams View -->
+                <div id="view-teams" class="view-panel active">
+                    <div style="display: flex; gap: 1rem; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 1rem;">
+                        <div class="search-bar" style="margin-bottom: 0; flex: 1; min-width: 250px;">
+                            <i class="ph ph-magnifying-glass"></i>
+                            <input type="text" id="team-search" placeholder="Search teams...">
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center; background: rgba(0,0,0,0.2); padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--surface-border);">
+                            <i class="ph ph-sort-ascending" style="color: var(--text-secondary);"></i>
+                            <select id="team-sort-select" style="background: transparent; border: none; color: var(--text-primary); font-family: inherit; font-size: 0.9rem; outline: none; cursor: pointer;">
+                                <option value="number-asc">Sort by: Team Number</option>
+                                <option value="epa-desc">Sort by: EPA (Highest First)</option>
+                                <option value="epa-asc">Sort by: EPA (Lowest First)</option>
+                                <option value="data-avail">Sort by: Data Available</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- New Event Breakdown Stats -->
+                    <div id="event-teams-summary" style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+                        <!-- Injected via JS -->
+                    </div>
+
+                    <div class="grid-container" id="teams-grid">
+                        <!-- Teams will be injected here via JS -->
+                    </div>
+                </div>
+
+                <!-- Matches View -->
+                <div id="view-matches" class="view-panel">
+                    <div id="alliances-container" class="hidden" style="margin-bottom: 2rem;">
+                        <div class="section-title" style="margin-bottom: 1rem;">
+                            <i class="ph ph-shield-check"></i> Playoff Alliances
+                        </div>
+                        <div class="grid-container" id="alliances-grid"
+                            style="grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));">
+                            <!-- Alliances grid injected here -->
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 1rem;">
+                        <div class="section-title" id="matches-section-title" style="margin-bottom: 0;">
+                            <i class="ph ph-calendar"></i> Match Schedule
+                        </div>
+                        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: flex-end;">
+                            <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                                <label for="match-team-filter" style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Filter</label>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="text" id="match-team-filter" placeholder="Team Number..." style="min-width: unset; width: 130px; padding: 0.5rem 1rem;">
+                                    <i class="ph ph-magnifying-glass" style="font-size: 1.25rem; color: var(--accent-primary);"></i>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                                <label for="match-time-offset" style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Time Offset</label>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="number" id="match-time-offset" placeholder="Mins (e.g. 60)" style="min-width: unset; width: 130px; padding: 0.5rem 1rem;">
+                                    <i class="ph ph-clock" style="font-size: 1.25rem; color: var(--accent-primary);"></i>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 2px;">
+                                <button id="open-print-btn" class="btn-primary" style="padding: 0.5rem 1rem; border-radius: 8px; height: 38px;">
+                                    <i class="ph ph-printer" style="margin-right: 0.25rem;"></i> Print
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-container" id="matches-list">
+                        <!-- Matches will be injected here via JS -->
+                    </div>
+                </div>
+                <!-- Matches will be injected here via JS -->
+            </div>
+            </div>
+
+            <!-- Rankings View -->
+            <div id="view-rankings" class="view-panel">
+                <div class="table-container" style="overflow-x: auto;">
+                    <table class="rankings-table"
+                        style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--surface-border); border-bottom-width: 2px;">
+                                <th style="padding: 1rem 0.5rem; color: var(--text-secondary); width: 60px;">Rank
+                                </th>
+                                <th style="padding: 1rem 0.5rem; color: var(--text-secondary);">Team</th>
+                                <th style="padding: 1rem 0.5rem; color: var(--text-secondary);">Record (W-L-T)</th>
+                                <th style="padding: 1rem 0.5rem; color: var(--text-secondary);">Avg RP</th>
+                                <th style="padding: 1rem 0.5rem; color: var(--text-secondary);">Total EPA</th>
+                                <th style="padding: 1rem 0.5rem; color: var(--text-secondary);">District Pts</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rankings-table-body">
+                            <!-- Rankings will be injected here via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Simulator View -->
+            <div id="view-simulator" class="view-panel">
+                <div class="simulator-controls"
+                    style="margin-bottom: 2rem; display: flex; gap: 1rem; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                    <div>
+                        <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--text-primary);"><i
+                                class="ph ph-magic-wand"></i> Competition Simulator</h2>
+                        <p class="text-secondary" style="font-size: 0.9rem; max-width: 600px;">Simulate remaining or
+                            historical matches using a weighted Historical EPA model to predict final rankings, alliance
+                            selections, and playoff outcomes.</p>
+                    </div>
+                    <button id="run-sim-btn" class="btn-primary"
+                        style="background: linear-gradient(135deg, #8b5cf6, #f97316); border-color: transparent;">
+                        <i class="ph ph-play-circle" style="font-size: 1.25rem;"></i>
+                        <span>Run Simulation</span>
+                    </button>
+                </div>
+
+                <div id="sim-status" class="status-container hidden">
+                    <div class="spinner"></div>
+                    <p id="sim-status-text">Simulating Matches...</p>
+                </div>
+
+                <div id="sim-results" class="hidden">
+                    <div class="sim-grid"
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; flex-wrap: wrap;">
+                        <div class="sim-section"
+                            style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--surface-border);">
+                            <div class="section-title"><i class="ph ph-list-numbers"></i> Predicted Rankings</div>
+                            <div class="table-container" style="overflow-x: auto; max-height: 400px;">
+                                <table class="rankings-table"
+                                    style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                                    <thead>
+                                        <tr
+                                            style="border-bottom: 1px solid var(--surface-border); border-bottom-width: 2px;">
+                                            <th style="padding: 0.75rem 0.5rem; color: var(--text-secondary);">Rank</th>
+                                            <th style="padding: 0.75rem 0.5rem; color: var(--text-secondary);">Team</th>
+                                            <th style="padding: 0.75rem 0.5rem; color: var(--text-secondary);">Proj. RP
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sim-rankings-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- New Match Schedule Breakdown Section -->
+                        <div class="sim-section"
+                            style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--surface-border); grid-column: 1 / -1;">
+                            <div class="section-title"><i class="ph ph-calendar"></i> Qualification Predictions</div>
+                            <div class="table-container" style="overflow-x: auto; max-height: 400px;">
+                                <table class="rankings-table"
+                                    style="width: 100%; border-collapse: collapse; text-align: center; font-size: 0.9rem;">
+                                    <thead>
+                                        <tr
+                                            style="border-bottom: 1px solid var(--surface-border); border-bottom-width: 2px;">
+                                            <th
+                                                style="padding: 0.75rem 0.5rem; color: var(--text-secondary); text-align: left;">
+                                                Match</th>
+                                            <th style="padding: 0.75rem 0.5rem; color: var(--alliance-red-text);">Red
+                                                Alliance</th>
+                                            <th style="padding: 0.75rem 0.5rem; color: var(--alliance-blue-text);">Blue
+                                                Alliance</th>
+                                            <th style="padding: 0.75rem 0.5rem; color: var(--text-secondary);">Predicted
+                                                Score</th>
+                                            <th style="padding: 0.75rem 0.5rem; color: var(--text-secondary);">Predicted
+                                                RP</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sim-matches-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="sim-section"
+                            style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--surface-border);">
+                            <div class="section-title"><i class="ph ph-shield-check"></i> Predicted Alliances</div>
+                            <div id="sim-alliances-list"
+                                style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 400px; overflow-y: auto;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sim-section"
+                        style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--surface-border); margin-top: 1.5rem;">
+                        <div class="section-title"><i class="ph ph-trophy"></i> Predicted Champion</div>
+                        <div id="sim-champion-card" style="text-align: center; padding: 2rem;"></div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Team Details Modal Overlay -->
+    <div id="team-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-container glass-panel">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modal-team-title">Team 0000</h2>
+                    <p id="modal-team-name" class="text-secondary">Team Name</p>
+                </div>
+                <button id="close-modal-btn" class="icon-btn">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+
+            <div class="modal-body" id="modal-body-content">
+                <!-- Year Summary -->
+                <div class="modal-section" id="modal-year-summary">
+                    <!-- Dynamic stats -->
+                </div>
+
+                <!-- Events History -->
+                <div class="modal-section events-history" id="modal-events-list">
+                    <!-- Dynamic Event Accordions -->
+                    <div class="status-container">
+                        <div class="spinner"></div>
+                        <p>Loading team history...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Match Predictor Modal Overlay -->
+    <div id="match-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-container glass-panel" style="max-width: 600px;">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modal-match-title">Match Predictor</h2>
+                    <p id="modal-match-subtitle" class="text-secondary">Expected Points Added Analysis</p>
+                </div>
+                <button id="close-match-modal-btn" class="icon-btn">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+
+            <div class="modal-body" id="modal-match-body-content">
+                <div class="status-container" id="match-modal-loading">
+                    <div class="spinner"></div>
+                    <p>Loading statbotics prediction...</p>
+                </div>
+                <div id="match-modal-stats" class="hidden" style="padding: 1rem 0;">
+                    <!-- Dynamic stats injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Print Schedule Modal Overlay -->
+    <div id="print-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-container glass-panel" style="max-width: 800px; background: var(--bg-base);">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modal-print-title">Print Friendly Schedule</h2>
+                    <p class="text-secondary">Filtered Matches</p>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button id="trigger-print-btn" class="btn-primary" onclick="window.print()">
+                        <i class="ph ph-printer" style="margin-right: 0.25rem;"></i> Print Now
+                    </button>
+                    <button id="close-print-modal-btn" class="icon-btn">
+                        <i class="ph ph-x"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-body" style="padding: 1.5rem; background: white; color: black; border-radius: 0 0 var(--radius-lg) var(--radius-lg);">
+                <div id="modal-print-body-content">
+                    <table style="width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 0.85rem; text-align: center;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #ccc; background: #f8f9fa;">
+                                <th style="padding: 0.5rem; text-align: left;">Match</th>
+                                <th style="padding: 0.5rem; text-align: left;">Time</th>
+                                <th style="padding: 0.5rem; color: #d32f2f;">Red Alliance</th>
+                                <th style="padding: 0.5rem; color: #1976d2;">Blue Alliance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="print-schedule-body">
+                            <!-- Filled by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal Overlay -->
+    <div id="settings-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-container glass-panel" style="max-width: 500px;">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modal-settings-title"><i class="ph ph-gear"></i> Settings</h2>
+                    <p class="text-secondary">Configure app preferences</p>
+                </div>
+                <button id="close-settings-btn" class="icon-btn">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="input-group" style="margin-bottom: 0.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+                        <a href="https://www.thebluealliance.com/account" target="_blank" rel="noopener noreferrer" style="color: var(--accent-primary); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--accent-secondary)'" onmouseout="this.style.color='var(--accent-primary)'">
+                            The Blue Alliance API Key <i class="ph ph-arrow-square-out" style="position: static; display: inline-block; vertical-align: text-bottom; margin-left: 0.25rem;"></i>
+                        </a>
+                    </label>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <i class="ph ph-key"></i>
+                        <input type="password" id="tba-api-key" placeholder="TBA API v3 Key" required autocomplete="off" style="width: 100%;">
+                    </div>
+                    <small class="helper-text" style="display: block; margin-top: 0.25rem;">Stored locally.</small>
+                </div>
+                <div class="input-group" style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">Favorite Team</label>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <i class="ph ph-star"></i>
+                        <input type="text" id="favorite-team" placeholder="My Team (e.g. frc238)" autocomplete="off" style="width: 100%;">
+                    </div>
+                    <small class="helper-text" style="display: block; margin-top: 0.25rem;">Used to populate event suggestions and load season overview information.</small>
+                </div>
+                <button type="button" id="save-settings-btn" class="btn-primary" style="justify-content: center;">
+                    <span>Save Settings</span>
+                    <i class="ph ph-check"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tools Modal Overlay -->
+    <div id="tools-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-container glass-panel" style="max-width: 500px;">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modal-tools-title"><i class="ph ph-wrench"></i> Quick Tools</h2>
+                    <p class="text-secondary">Useful resources</p>
+                </div>
+                <button id="close-tools-btn" class="icon-btn">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Sorted alphabetically -->
+                <a href="https://firstfrc.blob.core.windows.net/frc2026/FieldAssets/2026-field-dimension-dwgs.pdf" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); border: 1px solid var(--surface-border); border-radius: 8px; padding: 1rem; text-decoration: none; color: var(--text-primary); transition: all 0.2s; margin-bottom: 0.5rem;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='rgba(0,0,0,0.2)'">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="ph ph-ruler" style="color: var(--accent-primary); font-size: 1.25rem;"></i>
+                        <span style="font-size: 1.1rem; font-weight: 600; color: var(--accent-primary);">FRC 2026 Field Dimensions</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+                        PDF Document
+                        <i class="ph ph-arrow-square-out" style="vertical-align: middle;"></i>
+                    </div>
+                </a>
+
+                <a href="https://firstfrc.blob.core.windows.net/frc2026/Manual/2026GameManual.pdf" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); border: 1px solid var(--surface-border); border-radius: 8px; padding: 1rem; text-decoration: none; color: var(--text-primary); transition: all 0.2s; margin-bottom: 0.5rem;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='rgba(0,0,0,0.2)'">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="ph ph-book" style="color: var(--accent-primary); font-size: 1.25rem;"></i>
+                        <span style="font-size: 1.1rem; font-weight: 600; color: var(--accent-primary);">FRC 2026 Game Manual</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+                        PDF Document
+                        <i class="ph ph-arrow-square-out" style="vertical-align: middle;"></i>
+                    </div>
+                </a>
+
+                <a href="https://frctools.com/" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); border: 1px solid var(--surface-border); border-radius: 8px; padding: 1rem; text-decoration: none; color: var(--text-primary); transition: all 0.2s; margin-bottom: 0.5rem;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='rgba(0,0,0,0.2)'">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="ph ph-wrench" style="color: var(--accent-primary); font-size: 1.25rem;"></i>
+                        <span style="font-size: 1.1rem; font-weight: 600; color: var(--accent-primary);">FRC Tools</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+                        FRC Rules Search
+                        <i class="ph ph-arrow-square-out" style="vertical-align: middle;"></i>
+                    </div>
+                </a>
+
+                <a href="https://dashboard.lovat.app/#/match_schedule" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); border: 1px solid var(--surface-border); border-radius: 8px; padding: 1rem; text-decoration: none; color: var(--text-primary); transition: all 0.2s; margin-bottom: 0.5rem;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='rgba(0,0,0,0.2)'">
+                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="ph ph-users" style="color: var(--accent-primary); font-size: 1.25rem;"></i>
+                            <span style="font-size: 1.1rem; font-weight: 600; color: var(--accent-primary);">Lovat Dashboard</span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-tertiary); margin-left: 1.75rem;">
+                            Team Code: <span style="font-family: monospace; background: rgba(255,255,255,0.1); padding: 0.1rem 0.3rem; border-radius: 4px; color: var(--text-primary); letter-spacing: 1px;">QFVO2Z</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+                        Collaborative Scouting App
+                        <i class="ph ph-arrow-square-out" style="vertical-align: middle;"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- IndexedDB Wrapper -->
+    <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
+
+    <!-- Local App Logic -->
+    <script src="app.js"></script>
+</body>
+
+</html>
