@@ -179,6 +179,30 @@ test('fetchWithCache serves stale cached data when the network fails', async () 
     assert.deepEqual(await result.json(), cached.data);
 });
 
+test('fetchWithCache serves stale cached data for HTTP failures', async () => {
+    const cached = { data: { offline: true }, timestamp: 123 };
+    const { context } = createAppContext({
+        idbKeyval: {
+            async get() {
+                return cached;
+            },
+        },
+        fetch: async () => ({ ok: false, status: 429 }),
+    });
+    load(context, 'js/core.js');
+
+    const result = await context.fetchWithCache(
+        'https://example.test/data',
+        {},
+        false,
+        1
+    );
+
+    assert.equal(result.ok, true);
+    assert.equal(result._isCached, true);
+    assert.deepEqual(await result.json(), cached.data);
+});
+
 test('renderRankings renders empty state when rankings are unavailable', () => {
     const { context, elements } = createAppContext();
     load(context, 'js/core.js');
@@ -239,4 +263,22 @@ test('renderTeams filters by search text and orders teams by number', () => {
     assert.equal(cards.length, 1);
     assert.match(cards[0].innerHTML, />10</);
     assert.match(elements.get('event-teams-summary').innerHTML, /Total Teams:.*2/);
+});
+
+test('renderTeams escapes team-provided HTML', () => {
+    const { context, elements } = createAppContext();
+    load(context, 'js/core.js');
+    load(context, 'js/team-renderer.js');
+    setState(context, `currentData.playedStatus = { frc10: false };`);
+
+    context.renderTeams([{
+        key: 'frc10',
+        team_number: 10,
+        nickname: '<img src=x onerror=alert(1)>',
+        city: 'Test <City>',
+    }]);
+
+    const card = elements.get('teams-grid').children[0];
+    assert.match(card.innerHTML, /&lt;img src=x onerror=alert\(1\)&gt;/);
+    assert.doesNotMatch(card.innerHTML, /<img src=x/);
 });

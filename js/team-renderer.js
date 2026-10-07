@@ -70,6 +70,9 @@ function renderTeams(teams) {
         card.className = 'team-card';
 
         const locationStr = [team.city, team.state_prov, team.country].filter(Boolean).join(', ');
+        const safeTeamKey = escapeHtml(team.key);
+        const safeNickname = escapeHtml(team.nickname || 'Unknown Name');
+        const safeLocation = escapeHtml(locationStr || 'Location Unknown');
 
         // Check cache status
         const status = currentData.playedStatus[team.key];
@@ -101,13 +104,13 @@ function renderTeams(teams) {
                 <div class="team-number" style="margin-bottom: 0;">${team.team_number}</div>
                 <div style="display: flex; gap: 0.25rem; flex-wrap: wrap; justify-content: flex-end; align-items:flex-start; margin-top: 0.25rem;">
                    ${epaBadgeHtml}
-                   <div id="badge-${team.key}">${badgeHtml}</div>
+                   <div id="badge-${safeTeamKey}">${badgeHtml}</div>
                 </div>
             </div>
-            <div class="team-name" title="${team.nickname}">${team.nickname || 'Unknown Name'}</div>
+            <div class="team-name" title="${safeNickname}">${safeNickname}</div>
             <div class="team-location">
                 <i class="ph ph-map-pin"></i>
-                <span title="${locationStr}">${locationStr || 'Location Unknown'}</span>
+                <span title="${safeLocation}">${safeLocation}</span>
             </div>
         `;
 
@@ -338,4 +341,3 @@ async function checkTeamPlayedStatus(teamKey) {
         if (badgeEl) badgeEl.innerHTML = '';
     }
 }
-
