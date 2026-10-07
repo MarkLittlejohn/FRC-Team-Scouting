@@ -5,6 +5,7 @@
     --accent-primary: #8b5cf6;
     /* Neon Purple */
     --accent-primary-hover: #7c3aed;
+    --accent-color: var(--accent-primary);
     --accent-secondary: #f97316;
     /* Bright Flame Orange */
     --accent-tertiary: #1d4ed8;
