@@ -82,7 +82,8 @@ let currentData = {
     alliances: [],
     playedStatus: {},
     epaData: {},
-    districtPoints: {}
+    districtPoints: {},
+    matchEPAStats: {}
 };
 
 // IndexedDB Caching Wrapper
@@ -557,6 +558,7 @@ async function handleFetchData(e) {
     currentData.rankings = [];
     currentData.alliances = [];
     currentData.districtPoints = {};
+    currentData.matchEPAStats = {};
     statusMessage.innerHTML = `
         <div class="spinner"></div>
         <p>Fetching data for event <strong>${eventKey}</strong>...</p>
@@ -2041,10 +2043,11 @@ async function runSimulator() {
         return;
     }
 
-    runSimBtn.disabled = true;
-    simResults.classList.add('hidden');
-    simStatus.classList.remove('hidden');
-    simStatusText.innerText = 'Fetching historical EPA data for all teams...';
+    try {
+        runSimBtn.disabled = true;
+        simResults.classList.add('hidden');
+        simStatus.classList.remove('hidden');
+        simStatusText.innerText = 'Fetching historical EPA data for all teams...';
 
     const currentYear = new Date().getFullYear();
     const eventYearMatch = eventKeyInput.value.trim().match(/^(\d{4})/);
@@ -2295,9 +2298,15 @@ async function runSimulator() {
         `;
     }
 
-    simStatus.classList.add('hidden');
-    simResults.classList.remove('hidden');
-    runSimBtn.disabled = false;
+        simStatus.classList.add('hidden');
+        simResults.classList.remove('hidden');
+    } catch (error) {
+        console.error('Simulation failed:', error);
+        simStatusText.innerText = 'Simulation failed. Please try again.';
+    } finally {
+        simStatus.classList.add('hidden');
+        runSimBtn.disabled = false;
+    }
 }
 
 // Run Initialization
