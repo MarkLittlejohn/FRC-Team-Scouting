@@ -9,7 +9,7 @@ async function fetchFavoriteTeam() {
     }
 
     if (eventListLabel) {
-        eventListLabel.innerHTML = `<i class="ph ph-star-fill" style="color: #fbbf24; margin-right: 0.25rem;"></i> Events for ${teamKey.toUpperCase()}`;
+        eventListLabel.innerHTML = `<i class="ph ph-star-fill" style="color: #fbbf24; margin-right: 0.25rem;"></i> Events for ${escapeHtml(teamKey.toUpperCase())}`;
     }
 
     favTeamDashboard.classList.remove('hidden');
@@ -170,4 +170,3 @@ async function fetchAllEventsForYear() {
         }
     }
 }
-

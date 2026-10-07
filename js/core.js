@@ -86,6 +86,16 @@ let currentData = {
     matchEPAStats: {}
 };
 
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[character]));
+}
+
 // IndexedDB Caching Wrapper
 async function fetchWithCache(url, options = {}, bypassCache = false, maxAgeMs = null) {
     if (!window.idbKeyval) return fetch(url, options); // Fallback if CDN blocked
@@ -135,6 +145,16 @@ async function fetchWithCache(url, options = {}, bypassCache = false, maxAgeMs =
                 console.warn('IDB Write Error', e);
             }
         }
+        if (!response.ok && cachedResponse) {
+            console.warn(`HTTP ${response.status}, falling back to stale cache for:`, url);
+            return {
+                ok: true,
+                status: 200,
+                json: async () => cachedResponse.data,
+                _isCached: true,
+                _timestamp: cachedResponse.timestamp
+            };
+        }
         return response;
     } catch (err) {
         // Fallback to stale cache if offline
@@ -151,4 +171,3 @@ async function fetchWithCache(url, options = {}, bypassCache = false, maxAgeMs =
         throw err;
     }
 }
-

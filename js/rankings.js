@@ -107,13 +107,13 @@ function renderRankings(rankings) {
         }
 
         tr.innerHTML = `
-            <td style="padding: 1rem 0.5rem; font-weight: 600;">${row.rank}</td>
+            <td style="padding: 1rem 0.5rem; font-weight: 600;">${escapeHtml(row.rank)}</td>
             <td style="padding: 1rem 0.5rem;">
-                <span style="font-size: 1.1rem; font-weight: 700;">${teamNum}</span>
+                <span style="font-size: 1.1rem; font-weight: 700;">${escapeHtml(teamNum)}</span>
             </td>
-            <td style="padding: 1rem 0.5rem; color: #34d399;">${recordStr}</td>
-            <td style="padding: 1rem 0.5rem; font-family: monospace;">${avgRpStr}</td>
-            <td style="padding: 1rem 0.5rem; font-weight: 600; color: #818cf8;" id="ranking-epa-${teamNum}">${epaStr}</td>
+            <td style="padding: 1rem 0.5rem; color: #34d399;">${escapeHtml(recordStr)}</td>
+            <td style="padding: 1rem 0.5rem; font-family: monospace;">${escapeHtml(avgRpStr)}</td>
+            <td style="padding: 1rem 0.5rem; font-weight: 600; color: #818cf8;" id="ranking-epa-${escapeHtml(teamNum)}">${escapeHtml(epaStr)}</td>
             <td style="padding: 1rem 0.5rem; font-weight: 600; color: var(--text-primary);">${districtPtsStr}</td>
         `;
 

@@ -60,9 +60,9 @@ function renderPrintSchedule() {
             return teamKeys.map(k => {
                 const teamNum = k.replace('frc', '');
                 if (filterTerm && teamNum === filterTerm) {
-                    return `<span style="font-weight: bold; background-color: rgba(255, 255, 0, 0.4); padding: 0.1rem 0.2rem; border-radius: 4px; color: ${color};">${teamNum}</span>`;
+                    return `<span style="font-weight: bold; background-color: rgba(255, 255, 0, 0.4); padding: 0.1rem 0.2rem; border-radius: 4px; color: ${color};">${escapeHtml(teamNum)}</span>`;
                 }
-                return teamNum;
+                return escapeHtml(teamNum);
             }).join(', ');
         };
 
@@ -71,7 +71,7 @@ function renderPrintSchedule() {
 
         printScheduleBody.innerHTML += `
             <tr style="border-bottom: 1px solid #ddd;">
-                <td style="padding: 0.5rem; text-align: left; font-weight: bold;">${matchTitle}</td>
+                <td style="padding: 0.5rem; text-align: left; font-weight: bold;">${escapeHtml(matchTitle)}</td>
                 <td style="padding: 0.5rem; text-align: left;">${timeStr}</td>
                 <td style="padding: 0.5rem; color: #d32f2f;">${redTeamsStr}</td>
                 <td style="padding: 0.5rem; color: #1976d2;">${blueTeamsStr}</td>

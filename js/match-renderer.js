@@ -1,10 +1,5 @@
 function handleTeamSearch(e) {
-    const term = e.target.value.toLowerCase();
-    const filtered = currentData.teams.filter(t =>
-        t.team_number.toString().includes(term) ||
-        (t.nickname && t.nickname.toLowerCase().includes(term))
-    );
-    renderTeams(filtered);
+    renderTeams(currentData.teams);
 }
 
 // Render Matches
@@ -86,9 +81,9 @@ function renderMatches(matches) {
             
             return `
                 <div style="display: flex; flex-direction: column; align-items: center;">
-                    <span style="font-size: 1.1em; font-weight: bold; display: flex; align-items: center;">${teamNum}${indicatorHtml}</span>
+                    <span style="font-size: 1.1em; font-weight: bold; display: flex; align-items: center;">${escapeHtml(teamNum)}${indicatorHtml}</span>
                     <span style="font-size: 0.7em; opacity: 0.8; font-weight: normal; margin-top: 0.1rem; line-height: 1.1;">EPA: ${epaStr}</span>
-                    <span style="font-size: 0.7em; opacity: 0.8; font-weight: normal; line-height: 1.1;">Rank: ${rankStr}</span>
+                    <span style="font-size: 0.7em; opacity: 0.8; font-weight: normal; line-height: 1.1;">Rank: ${escapeHtml(rankStr)}</span>
                 </div>
             `;
         };
@@ -107,7 +102,7 @@ function renderMatches(matches) {
             const ytVideo = match.videos.find(v => v.type === 'youtube');
             if (ytVideo) {
                 videoLinkHTML = `
-                    <a href="https://youtube.com/watch?v=${ytVideo.key}" target="_blank" rel="noopener noreferrer" class="video-link" title="Watch Match Video">
+                    <a href="https://youtube.com/watch?v=${encodeURIComponent(ytVideo.key)}" target="_blank" rel="noopener noreferrer" class="video-link" title="Watch Match Video">
                         <i class="ph ph-youtube-logo" style="font-size:1.2rem;"></i> Watch
                     </a>
                 `;
@@ -132,7 +127,7 @@ function renderMatches(matches) {
             <div class="match-header">
                 <div class="match-title">
                     <i class="ph ph-flag-pennant"></i>
-                    ${matchTitle}
+                    ${escapeHtml(matchTitle)}
                 </div>
                 <div class="match-time">${timeStr}</div>
             </div>
@@ -173,13 +168,13 @@ function renderAlliances(alliances) {
     alliancesContainer.classList.remove('hidden');
 
     alliances.forEach((alliance, idx) => {
-        const title = alliance.name || `Alliance ${idx + 1}`;
+        const title = escapeHtml(alliance.name || `Alliance ${idx + 1}`);
         const picks = alliance.picks.map(p => p.replace('frc', ''));
-        const captain = picks[0];
+        const captain = escapeHtml(picks[0] || '');
 
         let subPicksHtml = '';
         if (picks.length > 1) {
-            subPicksHtml = picks.slice(1).map((p, i) => `<span style="opacity: 0.8;">Pick ${i + 1}: </span><strong>${p}</strong>`).join('<br>');
+            subPicksHtml = picks.slice(1).map((p, i) => `<span style="opacity: 0.8;">Pick ${i + 1}: </span><strong>${escapeHtml(p)}</strong>`).join('<br>');
         }
 
         const card = document.createElement('div');

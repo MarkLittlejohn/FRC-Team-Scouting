@@ -377,8 +377,8 @@ function renderTeamHistoryData(teamKey, events, statuses, epaData, currentEvtKey
         row.innerHTML = `
             <div class="event-header">
                 <div class="event-info">
-                    <div class="event-name"><span class="event-title-link" data-event="${evt.key}">${evt.name}</span></div>
-                    <div class="event-dates">${dateStr} • ${evt.city}, ${evt.state_prov}</div>
+                    <div class="event-name"><span class="event-title-link" data-event="${escapeHtml(evt.key)}">${escapeHtml(evt.name)}</span></div>
+                    <div class="event-dates">${escapeHtml(dateStr)} • ${escapeHtml(evt.city)}, ${escapeHtml(evt.state_prov)}</div>
                 </div>
                 <div class="event-badges" style="display:flex; gap: 0.5rem; align-items:center;">
                     ${badgesHtml}

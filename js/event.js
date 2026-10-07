@@ -37,7 +37,7 @@ async function handleFetchData(e) {
     currentData.matchEPAStats = {};
     statusMessage.innerHTML = `
         <div class="spinner"></div>
-        <p>Fetching data for event <strong>${eventKey}</strong>...</p>
+        <p>Fetching data for event <strong>${escapeHtml(eventKey)}</strong>...</p>
     `;
 
     try {
@@ -152,7 +152,7 @@ async function handleFetchData(e) {
         console.error(err);
         statusMessage.innerHTML = `
             <i class="ph ph-warning-circle" style="font-size: 3rem; color: #ef4444;"></i>
-            <p class="error-text">${err.message}</p>
+            <p class="error-text">${escapeHtml(err.message)}</p>
             <p style="font-size: 0.85rem;">Check the console for more details.</p>
         `;
     } finally {
