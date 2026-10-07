@@ -49,6 +49,7 @@ function createAppContext({ idbKeyval, fetch } = {}) {
         parseInt,
         document,
         window: { idbKeyval },
+        idbKeyval,
         fetch,
         setTimeout,
         clearTimeout,
@@ -62,6 +63,10 @@ function load(context, file) {
     vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, {
         filename: file,
     });
+}
+
+function setState(context, expression) {
+    vm.runInContext(expression, context);
 }
 
 test('fetchWithCache falls back to fetch when IndexedDB is unavailable', async () => {
@@ -141,10 +146,10 @@ test('fetchWithCache refreshes stale data and stores the new response', async ()
 
     assert.equal(result.ok, true);
     assert.equal(requestedUrl, 'https://example.test/data');
-    assert.deepEqual(writes, [{
-        url: 'https://example.test/data',
-        value: { data: networkData, timestamp: writes[0]?.value.timestamp },
-    }]);
+    assert.equal(writes.length, 1);
+    assert.equal(writes[0].url, 'https://example.test/data');
+    assert.deepEqual(JSON.parse(JSON.stringify(writes[0].value.data)), networkData);
+    assert.equal(typeof writes[0].value.timestamp, 'number');
 });
 
 test('fetchWithCache serves stale cached data when the network fails', async () => {
@@ -188,15 +193,15 @@ test('renderRankings formats records, RP, EPA, and district points', () => {
     const { context, elements } = createAppContext();
     load(context, 'js/core.js');
     load(context, 'js/rankings.js');
-    context.currentData.epaData = {
+    setState(context, `currentData.epaData = {
         1678: { epa: { total_points: 92.36 } },
-    };
-    context.currentData.districtPoints = {
+    };`);
+    setState(context, `currentData.districtPoints = {
         frc1678: { total: 42 },
-    };
-    context.currentData.teams = [
+    };`);
+    setState(context, `currentData.teams = [
         { key: 'frc1678', team_number: 1678, nickname: 'Citrus Circuits' },
-    ];
+    ];`);
 
     context.renderRankings([{
         rank: 1,
@@ -218,10 +223,10 @@ test('renderTeams filters by search text and orders teams by number', () => {
     const { context, elements } = createAppContext();
     load(context, 'js/core.js');
     load(context, 'js/team-renderer.js');
-    context.currentData.playedStatus = {
+    setState(context, `currentData.playedStatus = {
         frc10: false,
         frc2: false,
-    };
+    };`);
     elements.get('team-search').value = 'circuit';
     elements.get('team-sort-select').value = 'number-asc';
 
