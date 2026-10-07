@@ -518,7 +518,19 @@
     <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
 
     <!-- Local App Logic -->
-    <script src="app.js"></script>
+    <!-- Application modules are loaded in dependency order. They intentionally remain
+         classic scripts so the shared state and existing browser integrations work
+         without a build step. -->
+    <script src="js/core.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/team-renderer.js"></script>
+    <script src="js/team-dashboard.js"></script>
+    <script src="js/team-modal.js"></script>
+    <script src="js/match-renderer.js"></script>
+    <script src="js/rankings.js"></script>
+    <script src="js/simulator.js"></script>
+    <script src="js/event.js"></script>
+    <script src="js/init.js"></script>
 </body>
 
 </html>
