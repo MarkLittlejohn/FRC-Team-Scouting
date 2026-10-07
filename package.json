@@ -1,0 +1,9 @@
+{
+  "name": "frc-team-scouting",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Maniac Metrics FRC team scouting app",
+  "scripts": {
+    "test": "node --test"
+  }
+}
